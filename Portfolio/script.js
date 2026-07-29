@@ -1,11 +1,4 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
-
-/* ============================================================
-   Icon components (replaces the `lucide-react` import so this
-   file can run directly in the browser via CDN React + Babel,
-   with no bundler/npm install step required).
-   Same icon set, same names, same usage as before.
-   ============================================================ */
 function makeIcon(paths) {
   return function Icon({ size = 24, className = "", ...props }) {
     return (
