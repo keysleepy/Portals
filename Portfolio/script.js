@@ -937,10 +937,28 @@ function App() {
                     <Icon size={16} className={t.accent} />
                     <h3 className={`font-display font-semibold ${t.text}`}>{group.category}</h3>
                   </div>
-                  <div className={`relative marquee-mask border-y ${t.border} py-4`}>
+                  <div
+                    className={`relative marquee-mask border-y ${t.border} py-4`}
+                    style={{
+                      overflow: "hidden",
+                      WebkitMaskImage: "linear-gradient(to right, transparent 0, black 48px, black calc(100% - 48px), transparent 100%)",
+                      maskImage: "linear-gradient(to right, transparent 0, black 48px, black calc(100% - 48px), transparent 100%)",
+                    }}
+                  >
                     <div
-                      className={`marquee-track ${i % 2 === 1 ? "marquee-reverse" : ""}`}
-                      style={{ animationDuration: `${duration}s` }}
+                      className="marquee-track"
+                      style={{
+                        animationName: "marquee-scroll",
+                        animationDuration: `${duration}s`,
+                        animationTimingFunction: "linear",
+                        animationIterationCount: "infinite",
+                        animationDirection: i % 2 === 1 ? "reverse" : "normal",
+                        display: "flex",
+                        flexWrap: "nowrap",
+                        alignItems: "center",
+                        gap: "1rem",
+                        width: "max-content",
+                      }}
                     >
                       {looped.map((item, idx) => {
                         const lvl = SKILL_LEVELS[item.level];
