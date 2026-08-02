@@ -76,10 +76,10 @@ const NAV_LINKS = [
 ];
 
 const SKILL_LEVELS = {
-  core: { dot: "bg-teal-400", glow: "dot-glow-teal", text: "text-teal-400", label: "Core competency" },
-  working: { dot: "bg-amber-400", glow: "dot-glow-amber", text: "text-amber-400", label: "Guided practice" },
-  basic: { dot: "bg-blue-400", glow: "dot-glow-blue", text: "text-blue-400", label: "Basic familiarity" },
-  learning: { dot: "bg-slate-500", glow: "dot-glow-gray", text: "text-slate-400", label: "Currently learning" },
+  core: { dot: "bg-red-400", glow: "dot-glow-red", text: "text-red-400", label: "Core competency", code: "CORE", chipBg: "bg-red-400", chipText: "text-slate-950", desc: "Comfortable using this independently in real projects and troubleshooting scenarios." },
+  working: { dot: "bg-amber-400", glow: "dot-glow-amber", text: "text-amber-400", label: "Guided practice", code: "GUIDED", chipBg: "bg-amber-400", chipText: "text-slate-950", desc: "Can apply this with documentation, references, or guidance close at hand." },
+  basic: { dot: "bg-blue-400", glow: "dot-glow-blue", text: "text-blue-400", label: "Basic familiarity", code: "BASIC", chipBg: "bg-blue-400", chipText: "text-slate-950", desc: "Understands the fundamentals through hands-on labs and coursework." },
+  learning: { dot: "bg-slate-500", glow: "dot-glow-gray", text: "text-slate-400", label: "Currently learning", code: "NEW", chipBg: "bg-slate-500", chipText: "text-white", desc: "Just getting started — actively studying this right now." },
 };
 
 const SKILLS = [
@@ -109,6 +109,13 @@ const SKILLS = [
     ],
   },
 ];
+
+// How many of the 4 signal bars light up per proficiency level.
+const SKILL_METER_BY_LEVEL = { core: 4, working: 3, basic: 2, learning: 1 };
+// Only show legend entries for levels actually used in SKILLS, most senior first.
+const SKILL_LEGEND = ["core", "working", "basic", "learning"].filter((lvl) =>
+  SKILLS.some((group) => group.items.some((item) => item.level === lvl))
+);
 
 const LAB_CATEGORIES = ["All", "Packet Tracer", "GNS3", "EVE-NG", "Monitoring", "Firewall"];
 
@@ -141,7 +148,7 @@ const LABS = [
 ];
 
 const STATUS_STYLES = {
-  Completed: { dot: "bg-teal-400", text: "text-teal-300", label: "COMPLETED" },
+  Completed: { dot: "bg-red-400", text: "text-red-300", label: "COMPLETED" },
   "In Progress": { dot: "bg-amber-400", text: "text-amber-300", label: "IN PROGRESS" },
   Planned: { dot: "bg-slate-500", text: "text-slate-400", label: "PLANNED" },
 };
@@ -307,8 +314,8 @@ const theme = {
     text: "text-slate-100",
     textMuted: "text-slate-400",
     textFaint: "text-slate-500",
-    accent: "text-teal-400",
-    accentBg: "bg-teal-400",
+    accent: "text-red-400",
+    accentBg: "bg-red-400",
     navBg: "bg-slate-950/80",
     ring: "ring-slate-800",
   },
@@ -321,8 +328,8 @@ const theme = {
     text: "text-slate-900",
     textMuted: "text-slate-600",
     textFaint: "text-slate-400",
-    accent: "text-teal-600",
-    accentBg: "bg-teal-500",
+    accent: "text-red-600",
+    accentBg: "bg-red-500",
     navBg: "bg-white/80",
     ring: "ring-slate-200",
   },
@@ -570,6 +577,9 @@ function SectionHeading({ eyebrow, title, subtitle, t }) {
    contribution graph: github-contributions-api.jogruber.de)
    ============================================================ */
 const DOT_RADIUS_BY_LEVEL = [1.4, 2.2, 3, 3.8, 4.6];
+// Level 0 = no contributions that day; levels 1-4 run light red -> dark red,
+// same idea as GitHub's own green scale.
+const DOT_COLOR_BY_LEVEL = ["#fecaca", "#fca5a5", "#f87171", "#dc2626", "#7f1d1d"];
 
 function GithubActivity({ t, isDark }) {
   const [status, setStatus] = useState("loading"); // loading | ready | error
@@ -615,7 +625,7 @@ function GithubActivity({ t, isDark }) {
     };
   }, []);
 
-  const dotColor = isDark ? "#e2e8f0" : "#1e293b";
+  const emptyDotColor = isDark ? "#334155" : "#cbd5e1";
   const cellSize = 12;
   const width = weeks.length * cellSize;
   const height = 7 * cellSize;
@@ -631,7 +641,7 @@ function GithubActivity({ t, isDark }) {
           href={PROFILE.github}
           target="_blank"
           rel="noreferrer"
-          className={`inline-flex items-center gap-1.5 font-mono text-sm ${t.textMuted} hover:text-teal-400 transition-colors`}
+          className={`inline-flex items-center gap-1.5 font-mono text-sm ${t.textMuted} hover:text-red-400 transition-colors`}
         >
           @{PROFILE.githubUsername} <ExternalLink size={14} />
         </a>
@@ -645,7 +655,7 @@ function GithubActivity({ t, isDark }) {
         {status === "error" && (
           <p className={`font-mono text-sm ${t.textFaint} text-center`}>
             Couldn't load live contribution data right now — view the graph directly on{" "}
-            <a href={PROFILE.github} target="_blank" rel="noreferrer" className="text-teal-400 hover:underline">
+            <a href={PROFILE.github} target="_blank" rel="noreferrer" className="text-red-400 hover:underline">
               GitHub
             </a>.
           </p>
@@ -655,21 +665,23 @@ function GithubActivity({ t, isDark }) {
           <>
             <svg
               viewBox={`0 0 ${width} ${height}`}
-              style={{ color: dotColor, maxWidth: `${width}px`, width: "100%", height: "auto" }}
+              style={{ maxWidth: `${width}px`, width: "100%", height: "auto" }}
               className="block mx-auto"
             >
               {weeks.map((week, wi) =>
                 week.map((day, di) => {
                   if (!day) return null;
-                  const r = DOT_RADIUS_BY_LEVEL[day.level] ?? DOT_RADIUS_BY_LEVEL[0];
+                  const level = day.level ?? 0;
+                  const r = DOT_RADIUS_BY_LEVEL[level] ?? DOT_RADIUS_BY_LEVEL[0];
+                  const fill = level === 0 ? emptyDotColor : DOT_COLOR_BY_LEVEL[level];
                   return (
                     <circle
                       key={`${wi}-${di}`}
                       cx={wi * cellSize + cellSize / 2}
                       cy={di * cellSize + cellSize / 2}
                       r={r}
-                      fill="currentColor"
-                      opacity={day.level === 0 ? 0.35 : 1}
+                      fill={fill}
+                      opacity={level === 0 ? 0.6 : 1}
                     >
                       <title>{`${day.count} contributions on ${day.date}`}</title>
                     </circle>
@@ -697,6 +709,7 @@ function App() {
   const [projectSearch, setProjectSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedSkillGroup, setSelectedSkillGroup] = useState(null);
   const [showTop, setShowTop] = useState(false);
 
   const t = isDark ? theme.dark : theme.light;
@@ -721,6 +734,20 @@ function App() {
       document.body.style.overflow = prevOverflow;
     };
   }, [selectedProject]);
+
+  useEffect(() => {
+    if (!selectedSkillGroup) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setSelectedSkillGroup(null);
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [selectedSkillGroup]);
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 500);
@@ -760,7 +787,7 @@ function App() {
       {/* Scroll progress bar */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-transparent" style={{ height: "2px" }}>
         <div
-          className="h-full bg-teal-400 transition-all duration-150 ease-out"
+          className="h-full bg-red-400 transition-all duration-150 ease-out"
           style={{ width: `${progress * 100}%` }}
         />
       </div>
@@ -773,7 +800,7 @@ function App() {
             className="font-display font-semibold text-lg tracking-tight flex items-center gap-2"
           >
             <span className={`h-2 w-2 rounded-full ${t.accentBg} animate-blink`} />
-            {PROFILE.name}<span className="text-teal-400">.</span>
+            {PROFILE.name}<span className="text-red-400">.</span>
           </button>
 
           <div className="hidden md:flex items-center gap-7 font-mono text-xs tracking-wide">
@@ -781,7 +808,7 @@ function App() {
               <button
                 key={link.id}
                 onClick={() => scrollToId(link.id)}
-                className={`${t.textMuted} hover:text-teal-400 transition-colors uppercase`}
+                className={`${t.textMuted} hover:text-red-400 transition-colors uppercase`}
               >
                 {link.label}
               </button>
@@ -792,7 +819,7 @@ function App() {
             <button
               aria-label="Toggle theme"
               onClick={() => setIsDark((d) => !d)}
-              className={`h-9 w-9 rounded-md border ${t.border} flex items-center justify-center hover:border-teal-400 transition-colors`}
+              className={`h-9 w-9 rounded-md border ${t.border} flex items-center justify-center hover:border-red-400 transition-colors`}
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
@@ -809,7 +836,7 @@ function App() {
         {menuOpen && (
           <div className={`md:hidden border-t ${t.border} ${t.bg} px-5 py-4 flex flex-col gap-4 font-mono text-xs uppercase tracking-wide`}>
             {NAV_LINKS.map((link) => (
-              <button key={link.id} onClick={() => scrollToId(link.id)} className={`text-left ${t.textMuted} hover:text-teal-400`}>
+              <button key={link.id} onClick={() => scrollToId(link.id)} className={`text-left ${t.textMuted} hover:text-red-400`}>
                 {link.label}
               </button>
             ))}
@@ -841,38 +868,33 @@ function App() {
           </Reveal>
 
           <Reveal delay={260}>
-            <div className="flex flex-wrap items-center gap-3">
-              <a
-                href={mailtoUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-teal-400 text-slate-950 font-medium text-sm hover:bg-teal-300 transition-colors"
-              >
-                <Mail size={16} /> Email Me
-              </a>
+            <div className="flex flex-wrap items-center gap-6 font-mono text-sm lowercase">
               <a
                 href={PROFILE.github}
                 target="_blank"
                 rel="noreferrer"
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-md border ${t.border} text-sm hover:border-teal-400 transition-colors`}
+                className={`inline-flex items-baseline gap-1 ${t.textMuted} hover:text-red-400 transition-colors`}
               >
-                <Github size={16} /> GitHub
+                github <span className="text-red-400/70">↗</span>
               </a>
               <a
                 href={PROFILE.linkedin}
                 target="_blank"
                 rel="noreferrer"
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-md border ${t.border} text-sm hover:border-teal-400 transition-colors`}
+                className={`inline-flex items-baseline gap-1 ${t.textMuted} hover:text-red-400 transition-colors`}
               >
-                <Linkedin size={16} /> LinkedIn
+                linkedin <span className="text-red-400/70">↗</span>
               </a>
               <a
                 href={PROFILE.resumeUrl}
                 target="_blank"
                 rel="noreferrer"
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-md border ${t.border} text-sm hover:border-teal-400 transition-colors`}
+                className={`inline-flex items-baseline gap-1 ${t.textMuted} hover:text-red-400 transition-colors`}
               >
-                <Download size={16} /> Resume
+                resume <span className="text-red-400/70">↗</span>
+              </a>
+              <a href={mailtoUrl} className={`${t.textMuted} hover:text-red-400 transition-colors`}>
+                email
               </a>
             </div>
           </Reveal>
@@ -919,57 +941,66 @@ function App() {
       {/* SKILLS */}
       <section id="skills" className={`${t.bgSoft} border-y ${t.border} overflow-hidden`}>
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-24">
-          <SectionHeading eyebrow="02 · TOOLKIT" title="Technical Skills" t={t} />
+          <SectionHeading
+            eyebrow="02 · TOOLKIT"
+            title="Technical Skills"
+            subtitle="Click any skill below to view it up close."
+            t={t}
+          />
           <Reveal>
-            <p className={`font-body text-sm ${t.textMuted} mb-10 -mt-4`}>
-              <span className="text-amber-400 font-medium">Guided practice</span> in amber,{" "}
-              <span className="text-blue-400 font-medium">basic familiarity</span> in blue.
-            </p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-10 -mt-4">
+              {SKILL_LEGEND.map((lvl) => {
+                const meta = SKILL_LEVELS[lvl];
+                return (
+                  <span key={lvl} className="inline-flex items-center gap-2">
+                    <span className={`h-1.5 w-1.5 rounded-full ${meta.dot} ${meta.glow}`} />
+                    <span className={`font-mono text-xs ${t.textMuted}`}>{meta.label}</span>
+                  </span>
+                );
+              })}
+            </div>
           </Reveal>
-          <div className="space-y-10">
+          <div className="space-y-8">
             {SKILLS.map((group, i) => {
               const Icon = group.icon;
-              const duration = Math.max(14, group.items.length * 3);
+              const duration = Math.max(18, group.items.length * 4);
               const looped = [...group.items, ...group.items];
               return (
                 <Reveal key={group.category} delay={i * 80}>
-                  <div className="flex items-center gap-2.5 mb-4">
+                  <div className="flex items-center gap-2.5 mb-3">
                     <Icon size={16} className={t.accent} />
                     <h3 className={`font-display font-semibold ${t.text}`}>{group.category}</h3>
                   </div>
                   <div
-                    className={`relative marquee-mask border-y ${t.border} py-4`}
-                    style={{
-                      overflow: "hidden",
-                      WebkitMaskImage: "linear-gradient(to right, transparent 0, black 48px, black calc(100% - 48px), transparent 100%)",
-                      maskImage: "linear-gradient(to right, transparent 0, black 48px, black calc(100% - 48px), transparent 100%)",
-                    }}
+                    className={`ticker-rail marquee-mask border-y ${t.border} py-5 ${
+                      i % 2 === 1 ? "ticker-reverse" : ""
+                    } ${
+                      isDark
+                        ? "bg-gradient-to-r from-slate-950/70 via-slate-900/40 to-slate-950/70"
+                        : "bg-gradient-to-r from-slate-100/90 via-white/50 to-slate-100/90"
+                    }`}
                   >
                     <div
-                      className="marquee-track"
-                      style={{
-                        animationName: "marquee-scroll",
-                        animationDuration: `${duration}s`,
-                        animationTimingFunction: "linear",
-                        animationIterationCount: "infinite",
-                        animationDirection: i % 2 === 1 ? "reverse" : "normal",
-                        display: "flex",
-                        flexWrap: "nowrap",
-                        alignItems: "center",
-                        gap: "1rem",
-                        width: "max-content",
-                      }}
+                      className={`marquee-track ${i % 2 === 1 ? "marquee-reverse" : ""}`}
+                      style={{ animationDuration: `${duration}s`, gap: "2.5rem" }}
                     >
                       {looped.map((item, idx) => {
                         const lvl = SKILL_LEVELS[item.level];
                         return (
-                          <span key={idx} className="inline-flex items-center gap-4 shrink-0">
-                            <span className={`inline-flex items-center gap-2 font-mono text-sm sm:text-base uppercase tracking-wide ${lvl.text}`}>
-                              <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${lvl.dot} ${lvl.glow}`} />
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setSelectedSkillGroup({ ...group, clickedName: item.name })}
+                            className="skill-item-btn group/skill inline-flex items-center gap-3 shrink-0"
+                          >
+                            <span className={`skill-chip ${lvl.chipBg} ${lvl.chipText}`}>{lvl.code}</span>
+                            <span
+                              className={`font-mono text-sm sm:text-base font-semibold uppercase tracking-wider ${t.text} group-hover/skill:text-red-400 transition-colors`}
+                            >
                               {item.name}
                             </span>
-                            <span className={`${t.textFaint} text-sm`}>&#9670;</span>
-                          </span>
+                            <span className={`skill-tick ${t.textFaint}`} />
+                          </button>
                         );
                       })}
                     </div>
@@ -992,7 +1023,7 @@ function App() {
               onClick={() => switchProjectTab("labs")}
               aria-pressed={projectTab === "labs"}
               className={`font-display text-2xl sm:text-3xl font-semibold pb-1 border-b-2 transition-colors ${
-                projectTab === "labs" ? `${t.text} border-teal-400` : `${t.textFaint} border-transparent hover:${t.textMuted}`
+                projectTab === "labs" ? `${t.text} border-red-400` : `${t.textFaint} border-transparent hover:${t.textMuted}`
               }`}
             >
               Lab Projects
@@ -1002,7 +1033,7 @@ function App() {
               onClick={() => switchProjectTab("webapps")}
               aria-pressed={projectTab === "webapps"}
               className={`font-display text-2xl sm:text-3xl font-semibold pb-1 border-b-2 transition-colors ${
-                projectTab === "webapps" ? `${t.text} border-teal-400` : `${t.textFaint} border-transparent hover:${t.textMuted}`
+                projectTab === "webapps" ? `${t.text} border-red-400` : `${t.textFaint} border-transparent hover:${t.textMuted}`
               }`}
             >
               Web Applications
@@ -1010,7 +1041,7 @@ function App() {
           </div>
           <p className={`font-mono text-xs ${t.textFaint} mt-3`}>
             Select a project for full details. ·{" "}
-            <span className="text-teal-400 font-medium">Completed</span> in teal,{" "}
+            <span className="text-red-400 font-medium">Completed</span> in red,{" "}
             <span className="text-amber-400 font-medium">In Progress</span> in amber,{" "}
             <span className={`${t.textFaint} font-medium`}>Planned</span> in gray.
           </p>
@@ -1044,8 +1075,8 @@ function App() {
                       onClick={() => setActiveCategory(cat)}
                       className={`font-mono text-xs px-3 py-2 rounded-md border transition-colors ${
                         activeCategory === cat
-                          ? "bg-teal-400 text-slate-950 border-teal-400"
-                          : `${t.border} ${t.textMuted} hover:border-teal-400`
+                          ? "bg-red-400 text-slate-950 border-red-400"
+                          : `${t.border} ${t.textMuted} hover:border-red-400`
                       }`}
                     >
                       {cat}
@@ -1063,7 +1094,7 @@ function App() {
                   <Reveal key={item.title} delay={(i % 6) * 50}>
                     <button
                       onClick={() => setSelectedProject({ ...item, __tab: projectTab })}
-                      className={`card-glow w-full text-left rounded-lg border ${t.border} ${t.surface} overflow-hidden hover:border-teal-400/60 transition-colors flex flex-col h-full`}
+                      className={`card-glow w-full text-left rounded-lg border ${t.border} ${t.surface} overflow-hidden hover:border-red-400/60 transition-colors flex flex-col h-full`}
                     >
                       <div className={`relative h-28 border-b ${t.border} ${isDark ? "bg-slate-800/40" : "bg-slate-100"} flex items-center justify-center overflow-hidden`}>
                         {item.thumbnail ? (
@@ -1079,7 +1110,7 @@ function App() {
                         </div>
                         <span
                           className={`h-2.5 w-2.5 rounded-full shrink-0 ${STATUS_STYLES[item.status].dot} ${
-                            item.status === "Completed" ? "dot-glow-teal" : item.status === "In Progress" ? "dot-glow-amber" : "dot-glow-gray"
+                            item.status === "Completed" ? "dot-glow-red" : item.status === "In Progress" ? "dot-glow-amber" : "dot-glow-gray"
                           }`}
                         />
                       </div>
@@ -1093,28 +1124,44 @@ function App() {
       </section>
 
       {/* CERTIFICATIONS */}
+      jsx
+      {/* CERTIFICATIONS */}
       <section id="certifications" className={`${t.bgSoft} border-y ${t.border}`}>
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-24">
           <SectionHeading eyebrow="04 · CREDENTIALS" title="Certifications" t={t} />
-          <div className={CERTIFICATIONS.length === 1 ? "grid grid-cols-1 max-w-sm gap-8" : "grid sm:grid-cols-2 lg:grid-cols-3 gap-8"}>
+          <div
+            className={
+              CERTIFICATIONS.length === 1
+                ? "grid grid-cols-1 max-w-xs gap-8"
+                : "grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
+            }
+          >
             {CERTIFICATIONS.map((cert, i) => {
-              const tilt = i % 2 === 0 ? "-rotate-1" : "rotate-1";
+              const tilt = i % 2 === 0 ? "-rotate-2" : "rotate-2";
               return (
                 <Reveal key={cert.name} delay={(i % 3) * 60}>
                   <div
-                    className={`${tilt} hover:rotate-0 transition-transform duration-300 rounded-lg border ${t.border} ${t.surface} overflow-hidden shadow-xl`}
+                    className={`group relative ${tilt} hover:rotate-0 hover:-translate-y-1.5 transition-all duration-300 rounded-2xl bg-white shadow-lg hover:shadow-2xl p-7 flex flex-col items-center text-center`}
                   >
-                    <img src={cert.image} alt={`${cert.name} certificate`} className="w-full h-auto block" />
-                    <div className="p-4">
-                      <a
-                        href={cert.verifyUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-teal-400 text-slate-950 font-medium text-sm px-4 py-2.5 hover:bg-teal-300 transition-colors"
-                      >
-                        <ExternalLink size={15} /> {cert.verifyLabel || "Verify"}
-                      </a>
-                    </div>
+                    <a href={cert.certificateUrl} target="_blank" rel="noreferrer" className="flex flex-col items-center">
+                      <div className="h-14 w-14 rounded-xl bg-slate-50 border border-slate-100 shadow-sm flex items-center justify-center mb-4">
+                        <Network size={26} className="text-red-600" />
+                      </div>
+                      <h3 className="font-display font-semibold text-slate-900 text-base leading-snug mb-1.5 max-w-[220px]">
+                        {cert.name}
+                      </h3>
+                    </a>
+                    <p className="font-mono text-[11px] tracking-wider text-slate-400 uppercase mb-6">{cert.org}</p>
+                    <a
+                      href={cert.verifyUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-auto inline-flex items-center gap-1.5 font-mono text-xs tracking-widest text-slate-400 group-hover:text-red-600 transition-colors"
+                    >
+                      <span className="text-slate-300 group-hover:text-red-500 transition-colors">‹</span>
+                      {(cert.verifyLabel || "Verify").toUpperCase()}
+                      <span className="text-slate-300 group-hover:text-red-500 transition-colors">›</span>
+                    </a>
                   </div>
                 </Reveal>
               );
@@ -1160,10 +1207,10 @@ function App() {
             © {new Date().getFullYear()} {PROFILE.name}. Built with Next.js + Tailwind CSS.
           </p>
           <div className="flex items-center gap-4">
-            <a href={PROFILE.github} className={`${t.textFaint} hover:text-teal-400`} aria-label="GitHub"><Github size={16} /></a>
-            <a href={PROFILE.linkedin} className={`${t.textFaint} hover:text-teal-400`} aria-label="LinkedIn"><Linkedin size={16} /></a>
-            <a href={mailtoUrl} className={`${t.textFaint} hover:text-teal-400`} aria-label="Email"><Mail size={16} /></a>
-            <a href={PROFILE.resumeUrl} target="_blank" rel="noreferrer" className={`font-mono text-xs ${t.textMuted} hover:text-teal-400 flex items-center gap-1.5`}>
+            <a href={PROFILE.github} className={`${t.textFaint} hover:text-red-400`} aria-label="GitHub"><Github size={16} /></a>
+            <a href={PROFILE.linkedin} className={`${t.textFaint} hover:text-red-400`} aria-label="LinkedIn"><Linkedin size={16} /></a>
+            <a href={mailtoUrl} className={`${t.textFaint} hover:text-red-400`} aria-label="Email"><Mail size={16} /></a>
+            <a href={PROFILE.resumeUrl} target="_blank" rel="noreferrer" className={`font-mono text-xs ${t.textMuted} hover:text-red-400 flex items-center gap-1.5`}>
               <Download size={13} /> Resume
             </a>
           </div>
@@ -1175,7 +1222,7 @@ function App() {
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           aria-label="Back to top"
-          className={`fixed bottom-6 right-6 z-50 h-11 w-11 rounded-full bg-teal-400 text-slate-950 flex items-center justify-center shadow-lg hover:bg-teal-300 transition-colors`}
+          className={`fixed bottom-6 right-6 z-50 h-11 w-11 rounded-full bg-red-400 text-slate-950 flex items-center justify-center shadow-lg hover:bg-red-300 transition-colors`}
         >
           <ArrowUp size={18} />
         </button>
@@ -1209,7 +1256,7 @@ function App() {
               <button
                 onClick={() => setSelectedProject(null)}
                 aria-label="Close"
-                className={`absolute top-3 right-3 h-8 w-8 rounded-md border ${t.border} ${t.surfaceSolid} flex items-center justify-center hover:border-teal-400 transition-colors`}
+                className={`absolute top-3 right-3 h-8 w-8 rounded-md border ${t.border} ${t.surfaceSolid} flex items-center justify-center hover:border-red-400 transition-colors`}
               >
                 <X size={15} />
               </button>
@@ -1228,7 +1275,7 @@ function App() {
               <ul className="space-y-2 mb-5">
                 {selectedProject.highlights.map((h) => (
                   <li key={h} className={`flex items-start gap-2.5 font-body text-sm ${t.textMuted}`}>
-                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-teal-400 shrink-0" />
+                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
                     {h}
                   </li>
                 ))}
@@ -1241,22 +1288,83 @@ function App() {
                 ))}
               </div>
               <div className={`flex items-center gap-4 flex-wrap pt-5 border-t ${t.border}`}>
-                <a href={selectedProject.github} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-teal-400`}>
+                <a href={selectedProject.github} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-red-400`}>
                   <GithubIcon size={13} /> Repository
                 </a>
-                <a href={selectedProject.docs} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-teal-400`}>
+                <a href={selectedProject.docs} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-red-400`}>
                   <FileText size={13} /> Documentation
                 </a>
                 {selectedProject.__tab === "labs" ? (
-                  <a href={selectedProject.verify} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-teal-400`}>
+                  <a href={selectedProject.verify} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-red-400`}>
                     <CheckCircle2 size={13} /> Verify
                   </a>
                 ) : (
-                  <a href={selectedProject.view} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-teal-400`}>
+                  <a href={selectedProject.view} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-red-400`}>
                     <ExternalLink size={13} /> View
                   </a>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedSkillGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+            onClick={() => setSelectedSkillGroup(null)}
+          />
+          <div
+            className={`relative w-full max-w-md rounded-lg border ${t.border} ${t.surfaceSolid} shadow-2xl overflow-hidden flex flex-col`}
+            style={{ maxHeight: "85vh" }}
+          >
+            <div className={`flex items-center justify-between gap-3 px-6 py-4 border-b ${t.border} shrink-0`}>
+              <div className="flex items-center gap-2.5 min-w-0">
+                {(() => {
+                  const CatIcon = selectedSkillGroup.icon;
+                  return <CatIcon size={17} className={`${t.accent} shrink-0`} />;
+                })()}
+                <h3 className={`font-display font-semibold truncate ${t.text}`}>{selectedSkillGroup.category}</h3>
+              </div>
+              <button
+                onClick={() => setSelectedSkillGroup(null)}
+                aria-label="Close"
+                className={`h-8 w-8 rounded-md border ${t.border} ${t.surfaceSolid} flex items-center justify-center hover:border-red-400 transition-colors shrink-0`}
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto">
+              {selectedSkillGroup.items.map((item) => {
+                const lvl = SKILL_LEVELS[item.level];
+                const lit = SKILL_METER_BY_LEVEL[item.level] ?? 1;
+                const isClicked = item.name === selectedSkillGroup.clickedName;
+                return (
+                  <div
+                    key={item.name}
+                    className={`px-6 py-4 border-b ${t.border} last:border-b-0 ${
+                      isClicked ? (isDark ? "bg-red-400/[0.06]" : "bg-red-50") : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3 mb-2.5">
+                      <span className={`font-mono text-sm font-semibold uppercase tracking-wide ${t.text}`}>{item.name}</span>
+                      <span className={`font-mono text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full shrink-0 ${lvl.chipBg} ${lvl.chipText}`}>
+                        {lvl.code}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {[0, 1, 2, 3].map((seg) => (
+                        <span
+                          key={seg}
+                          className={`h-1 flex-1 rounded-full ${seg < lit ? lvl.dot : isDark ? "bg-slate-800" : "bg-slate-200"}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
