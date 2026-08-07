@@ -282,16 +282,16 @@ const EXPERIENCE = [
 
 const EDUCATION = [
   {
-    level: "Senior High School",
-    program: "General Academic Strand (GAS)",
-    institution: "San Juan National High School",
-    duration: "2021 — 2023",
-  },
-  {
     level: "Bachelor's Degree",
     program: "BS in Computer Engineering",
     institution: "University of Rizal System — Antipolo Campus",
     duration: "2023 — 2027",
+  },
+  {
+    level: "Senior High School",
+    program: "General Academic Strand (GAS)",
+    institution: "San Juan National High School",
+    duration: "2021 — 2023",
   },
 ];
 
@@ -1112,8 +1112,8 @@ function App() {
                   <div
                     className={
                       certs.length === 1
-                        ? "grid grid-cols-1 max-w-xs gap-8 mt-6"
-                        : "grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-6"
+                        ? "grid grid-cols-1 max-w-[140px] gap-3 mt-4"
+                        : "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 mt-4"
                     }
                   >
                     {certs.map((cert, i) => {
@@ -1121,22 +1121,22 @@ function App() {
                       return (
                         <Reveal key={cert.name} delay={(i % 3) * 60}>
                           <div
-                            className={`group relative ${tilt} hover:rotate-0 hover:-translate-y-1.5 transition-all duration-300 rounded-2xl bg-white shadow-lg hover:shadow-2xl p-7 flex flex-col items-center text-center`}
+                            className={`group relative ${tilt} hover:rotate-0 hover:-translate-y-1 transition-all duration-300 rounded-lg bg-white shadow hover:shadow-lg p-2.5 flex flex-col items-center text-center`}
                           >
                             <a href={cert.certificateUrl} target="_blank" rel="noreferrer" className="flex flex-col items-center">
-                              <div className="h-14 w-14 rounded-xl bg-slate-50 border border-slate-100 shadow-sm flex items-center justify-center mb-4">
-                                <Network size={26} className="text-red-600" />
+                              <div className="h-7 w-7 rounded-md bg-slate-50 border border-slate-100 shadow-sm flex items-center justify-center mb-1.5">
+                                <Network size={13} className="text-red-600" />
                               </div>
-                              <h3 className="font-display font-semibold text-slate-900 text-base leading-snug mb-1.5 max-w-[220px]">
+                              <h3 className="font-display font-semibold text-slate-900 text-[10px] leading-snug mb-0.5 max-w-[100px]">
                                 {cert.name}
                               </h3>
                             </a>
-                            <p className="font-mono text-[11px] tracking-wider text-slate-400 uppercase mb-6">{cert.org}</p>
+                            <p className="font-mono text-[7px] tracking-wider text-slate-400 uppercase mb-1.5">{cert.org}</p>
                             <a
                               href={cert.verifyUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="mt-auto inline-flex items-center gap-1.5 font-mono text-xs tracking-widest text-slate-400 group-hover:text-red-600 transition-colors"
+                              className="mt-auto inline-flex items-center gap-0.5 font-mono text-[8px] tracking-widest text-slate-400 group-hover:text-red-600 transition-colors"
                             >
                               <span className="text-slate-300 group-hover:text-red-500 transition-colors">‹</span>
                               {(cert.verifyLabel || "Verify").toUpperCase()}
