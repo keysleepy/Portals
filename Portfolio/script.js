@@ -697,7 +697,7 @@ function GithubActivity({ t, isDark }) {
    Main App
    ============================================================ */
 function App() {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [projectTab, setProjectTab] = useState("labs"); // "labs" | "webapps"
   const [projectSearch, setProjectSearch] = useState("");
@@ -1278,11 +1278,7 @@ function App() {
                 <a href={selectedProject.docs} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-red-400`}>
                   <FileText size={13} /> Documentation
                 </a>
-                {selectedProject.__tab === "labs" ? (
-                  <a href={selectedProject.verify} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-red-400`}>
-                    <CheckCircle2 size={13} /> Verify
-                  </a>
-                ) : (
+                {selectedProject.__tab !== "labs" && (
                   <a href={selectedProject.view} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 font-mono text-xs ${t.textMuted} hover:text-red-400`}>
                     <ExternalLink size={13} /> View
                   </a>
