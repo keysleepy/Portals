@@ -50,6 +50,7 @@ const Menu = makeIcon(<><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="
 const X = makeIcon(<><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>);
 const MapPin = makeIcon(<><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></>);
 const ImageIcon = makeIcon(<><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.1-3.1a2 2 0 0 0-2.83 0L6 21" /></>);
+const ArrowRight = makeIcon(<><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>);
 
 /* ============================================================
    EDIT ME — replace with your real details before publishing
@@ -271,11 +272,15 @@ const CERTIFICATIONS = [
 
 const EXPERIENCE = [
   {
-    company: "Special Program for Employment of Students",
+    company: "Special Program for Employment of Students (DOLE)",
     position: "SPES",
     duration: "2026",
     type: "Government Program",
-    description: "Continued participation in DOLE's student employment program, taking on more responsibility while balancing coursework in Computer Engineering.",
+    bullets: [
+      "Provided basic IT assistance, hardware troubleshooting, and office technical support.",
+      "Managed administrative data entry tasks while balancing rigorous Computer Engineering coursework.",
+      "Assisted department personnel with digital filing and software configurations.",
+    ],
     tech: ["Basic IT Assistance"],
   },
 ];
@@ -619,75 +624,131 @@ function GithubActivity({ t, isDark }) {
     };
   }, []);
 
-  const emptyDotColor = isDark ? "#334155" : "#cbd5e1";
   const cellSize = 12;
   const width = weeks.length * cellSize;
   const height = 7 * cellSize;
 
+  const term = isDark
+    ? {
+        panelBg: "bg-[#0a0f1a]",
+        titleBarBg: "bg-[#0d1420]",
+        border: "border-slate-800",
+        prompt: "text-slate-500",
+        output: "text-slate-300",
+        muted: "text-slate-600",
+        scanline: "text-red-400",
+        emptySquare: "#1e293b",
+      }
+    : {
+        panelBg: "bg-white",
+        titleBarBg: "bg-slate-50",
+        border: "border-slate-200",
+        prompt: "text-slate-400",
+        output: "text-slate-700",
+        muted: "text-slate-400",
+        scanline: "text-red-500",
+        emptySquare: "#e2e8f0",
+      };
+
   return (
     <section id="github-activity" className="max-w-6xl mx-auto px-5 sm:px-8 py-24">
-      <div className="flex items-end justify-between flex-wrap gap-3 mb-10 sm:mb-14">
-        <div>
-          <p className={`font-mono text-xs tracking-widest ${t.accent} mb-3`}>06 · GITHUB</p>
-          <h2 className={`font-display text-2xl sm:text-3xl font-semibold ${t.text}`}>Github Activity</h2>
-        </div>
-        <a
-          href={PROFILE.github}
-          target="_blank"
-          rel="noreferrer"
-          className={`inline-flex items-center gap-1.5 font-mono text-sm ${t.textMuted} hover:text-red-400 transition-colors`}
-        >
-          @{PROFILE.githubUsername} <ExternalLink size={14} />
-        </a>
-      </div>
+      <Reveal>
+        <p className={`font-mono text-xs tracking-widest ${t.accent} mb-3`}>06 · GITHUB</p>
+        <h2 className={`font-display text-2xl sm:text-3xl font-semibold ${t.text} mb-8 sm:mb-10`}>Github Activity</h2>
+      </Reveal>
 
       <Reveal>
-        {status === "loading" && (
-          <p className={`font-mono text-sm ${t.textFaint} text-center`}>Loading contribution activity…</p>
-        )}
-
-        {status === "error" && (
-          <p className={`font-mono text-sm ${t.textFaint} text-center`}>
-            Couldn't load live contribution data right now — view the graph directly on{" "}
-            <a href={PROFILE.github} target="_blank" rel="noreferrer" className="text-red-400 hover:underline">
-              GitHub
-            </a>.
-          </p>
-        )}
-
-        {status === "ready" && (
-          <>
-            <svg
-              viewBox={`0 0 ${width} ${height}`}
-              style={{ maxWidth: `${width}px`, width: "100%", height: "auto" }}
-              className="block mx-auto"
-            >
-              {weeks.map((week, wi) =>
-                week.map((day, di) => {
-                  if (!day) return null;
-                  const level = day.level ?? 0;
-                  const r = DOT_RADIUS_BY_LEVEL[level] ?? DOT_RADIUS_BY_LEVEL[0];
-                  const fill = level === 0 ? emptyDotColor : DOT_COLOR_BY_LEVEL[level];
-                  return (
-                    <circle
-                      key={`${wi}-${di}`}
-                      cx={wi * cellSize + cellSize / 2}
-                      cy={di * cellSize + cellSize / 2}
-                      r={r}
-                      fill={fill}
-                      opacity={level === 0 ? 0.6 : 1}
-                    >
-                      <title>{`${day.count} contributions on ${day.date}`}</title>
-                    </circle>
-                  );
-                })
-              )}
-            </svg>
-            <p className={`font-mono text-xs ${t.textFaint} mt-4 text-center`}>
-              {total.toLocaleString()} contributions in the last year
+        <div className={`rounded-xl overflow-hidden border ${term.border} shadow-2xl ${term.panelBg}`}>
+          {/* Title bar */}
+          <div className={`flex items-center gap-2 px-4 py-3 ${term.titleBarBg} border-b ${term.border}`}>
+            <span className="h-3 w-3 rounded-full bg-red-500" />
+            <span className="h-3 w-3 rounded-full bg-amber-400" />
+            <span className="h-3 w-3 rounded-full bg-emerald-500" />
+            <p className={`ml-3 font-mono text-[11px] ${term.prompt} truncate`}>
+              arkey@ursystem:~$ ./github-activity.sh
             </p>
-          </>
-        )}
+            <a
+              href={PROFILE.github}
+              target="_blank"
+              rel="noreferrer"
+              className={`ml-auto inline-flex items-center gap-1 font-mono text-[11px] ${term.prompt} hover:text-red-400 transition-colors shrink-0`}
+            >
+              @{PROFILE.githubUsername} <ExternalLink size={11} />
+            </a>
+          </div>
+
+          {/* Terminal body */}
+          <div className="relative px-5 py-6 sm:px-8 sm:py-8 font-mono text-[13px] leading-relaxed">
+            <div className={`absolute inset-0 bg-scanlines ${term.scanline} pointer-events-none`} />
+            <div className="relative">
+              <p className={term.prompt}>
+                <span className="text-red-400">$</span> curl -s api.github.com/users/{PROFILE.githubUsername}/contributions
+              </p>
+
+              {status === "loading" && (
+                <p className={`${term.prompt} mt-2`}>
+                  fetching contribution data<span className="animate-blink">_</span>
+                </p>
+              )}
+
+              {status === "error" && (
+                <p className={`${term.prompt} mt-2`}>
+                  error: request failed — view directly on{" "}
+                  <a href={PROFILE.github} target="_blank" rel="noreferrer" className="text-red-400 hover:underline">
+                    github.com
+                  </a>
+                  <span className="animate-blink">_</span>
+                </p>
+              )}
+
+              {status === "ready" && (
+                <>
+                  <p className={`${term.output} mt-2`}>
+                    200 OK — <span className="text-red-400">{total.toLocaleString()}</span> contributions in the last year
+                  </p>
+
+                  <p className={`${term.prompt} mt-5 mb-3`}>
+                    <span className="text-red-400">$</span> cat contributions.graph
+                  </p>
+
+                  <div className="overflow-x-auto -mx-1 px-1 pb-1">
+                    <svg
+                      viewBox={`0 0 ${width} ${height}`}
+                      style={{ minWidth: `${width}px`, height: "auto" }}
+                      className="block"
+                    >
+                      {weeks.map((week, wi) =>
+                        week.map((day, di) => {
+                          if (!day) return null;
+                          const level = day.level ?? 0;
+                          const fill = level === 0 ? term.emptySquare : DOT_COLOR_BY_LEVEL[level];
+                          return (
+                            <rect
+                              key={`${wi}-${di}`}
+                              x={wi * cellSize + 1.5}
+                              y={di * cellSize + 1.5}
+                              width={cellSize - 3}
+                              height={cellSize - 3}
+                              rx={2}
+                              fill={fill}
+                              opacity={level === 0 ? 0.5 : 1}
+                            >
+                              <title>{`${day.count} contributions on ${day.date}`}</title>
+                            </rect>
+                          );
+                        })
+                      )}
+                    </svg>
+                  </div>
+
+                  <p className={`${term.muted} mt-4`}>
+                    <span className="text-red-400">$</span> <span className="animate-blink">_</span>
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </Reveal>
     </section>
   );
@@ -702,7 +763,9 @@ function App() {
   const [projectTab, setProjectTab] = useState("labs"); // "labs" | "webapps"
   const [projectSearch, setProjectSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [showAllWebApps, setShowAllWebApps] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [activeExpIndex, setActiveExpIndex] = useState(0);
   const [selectedSkillGroup, setSelectedSkillGroup] = useState(null);
   const [showTop, setShowTop] = useState(false);
   const [openCertCategories, setOpenCertCategories] = useState([]);
@@ -720,6 +783,7 @@ function App() {
     setProjectTab(tab);
     setActiveCategory("All");
     setProjectSearch("");
+    setShowAllWebApps(false);
   }, []);
 
   useEffect(() => {
@@ -1052,6 +1116,59 @@ function App() {
               <p className={`font-mono text-sm ${t.textMuted}`}>No labs documented yet — check back soon.</p>
             </div>
           </Reveal>
+        ) : projectTab === "webapps" ? (
+          <>
+            {filteredProjects.length === 0 ? (
+              <p className={`font-mono text-sm ${t.textFaint}`}>No results match "{projectSearch}".</p>
+            ) : (
+              <>
+                <div className={`divide-y ${t.border}`}>
+                  {(showAllWebApps ? filteredProjects : filteredProjects.slice(0, 3)).map((item, i) => (
+                    <Reveal key={item.title} delay={(i % 6) * 50}>
+                      <a
+                        href={item.github}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group block py-7 first:pt-0"
+                      >
+                        <div className="flex items-center gap-2">
+                          <h3 className={`font-display font-semibold text-lg ${t.text} group-hover:${t.accent} transition-colors`}>
+                            {item.title}
+                          </h3>
+                          <ArrowRight
+                            size={16}
+                            className={`${t.textFaint} group-hover:${t.accent} group-hover:translate-x-1 transition-all shrink-0`}
+                          />
+                        </div>
+                        <p className={`font-body text-sm ${t.textMuted} leading-relaxed mt-2 max-w-2xl`}>
+                          {renderDescription(item.description, t)}
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          {item.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className={`font-mono text-[11px] px-2.5 py-1 rounded border ${t.border} ${t.textMuted}`}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </a>
+                    </Reveal>
+                  ))}
+                </div>
+                {filteredProjects.length > 3 && (
+                  <button
+                    onClick={() => setShowAllWebApps((v) => !v)}
+                    className={`mt-6 inline-flex items-center gap-1.5 font-mono text-xs ${t.accent} hover:opacity-80 transition-opacity`}
+                  >
+                    {showAllWebApps ? "View less" : `View more (${filteredProjects.length - 3})`}
+                    <ArrowRight size={13} className={showAllWebApps ? "-rotate-90" : "rotate-90"} />
+                  </button>
+                )}
+              </>
+            )}
+          </>
         ) : (
           <>
             {filteredProjects.length === 0 ? (
@@ -1157,28 +1274,56 @@ function App() {
       {/* EXPERIENCE */}
       <section id="experience" className="max-w-6xl mx-auto px-5 sm:px-8 py-24">
         <SectionHeading eyebrow="05 · TIMELINE" title="Experience" t={t} />
-        <div className={`relative border-l ${t.border} pl-8 space-y-10`}>
-          {EXPERIENCE.map((exp, i) => (
-            <Reveal key={exp.position} delay={i * 80}>
-              <div className="relative">
-                <span
-                  className={`absolute top-1 h-3 w-3 rounded-full ${t.accentBg} ring-4 ${isDark ? "ring-slate-950" : "ring-slate-50"}`}
-                  style={{ left: "-38px" }}
-                />
-                <p className={`font-mono text-xs tracking-wider ${t.textFaint} mb-1`}>{exp.type.toUpperCase()} · {exp.duration.toUpperCase()}</p>
-                <h3 className="font-display font-semibold text-lg mb-0.5">{exp.position}</h3>
-                <p className={`font-mono text-sm ${t.accent} mb-3`}>{exp.company}</p>
-                <p className={`font-body text-sm ${t.textMuted} mb-3 max-w-2xl`}>{exp.description}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {exp.tech.map((tech) => (
-                    <span key={tech} className={`font-mono text-xs px-2 py-1 rounded border ${t.border} ${t.textMuted}`}>
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-          ))}
+        <div className="flex flex-col sm:flex-row gap-1 sm:gap-8">
+          {/* Tab list */}
+          <div className={`flex sm:flex-col overflow-x-auto sm:overflow-visible border-b sm:border-b-0 sm:border-l ${t.border} sm:w-52 shrink-0`}>
+            {EXPERIENCE.map((exp, i) => {
+              const active = i === activeExpIndex;
+              return (
+                <button
+                  key={exp.position}
+                  onClick={() => setActiveExpIndex(i)}
+                  className={`relative shrink-0 text-left px-4 py-3 font-mono text-xs tracking-wide whitespace-nowrap sm:whitespace-normal border-b-2 sm:border-b-0 sm:border-l-2 -mb-px sm:-ml-px transition-colors ${
+                    active
+                      ? `${t.accent} border-red-400 ${isDark ? "bg-slate-900/40" : "bg-red-50/60"}`
+                      : `${t.textFaint} border-transparent hover:${t.textMuted}`
+                  }`}
+                >
+                  {exp.position}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Content panel */}
+          <div className="flex-1 min-w-0 pt-6 sm:pt-1">
+            {EXPERIENCE.map((exp, i) => {
+              if (i !== activeExpIndex) return null;
+              return (
+                <Reveal key={exp.position}>
+                  <p className={`font-mono text-xs tracking-wider ${t.textFaint} mb-1`}>
+                    {exp.type.toUpperCase()} · {exp.duration.toUpperCase()}
+                  </p>
+                  <h3 className="font-display font-semibold text-lg mb-0.5">{exp.company}</h3>
+                  <ul className="mt-3 mb-4 space-y-2.5 max-w-2xl">
+                    {exp.bullets.map((bullet, bi) => (
+                      <li key={bi} className={`font-body text-sm ${t.textMuted} flex gap-2`}>
+                        <span className="text-red-400 mt-0.5 shrink-0">▶</span>
+                        <span>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex flex-wrap gap-1.5">
+                    {exp.tech.map((tech) => (
+                      <span key={tech} className={`font-mono text-xs px-2 py-1 rounded border ${t.border} ${t.textMuted}`}>
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
       </section>
 
